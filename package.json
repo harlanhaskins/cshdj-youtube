@@ -1,0 +1,16 @@
+{
+  "name": "cshdj-youtube",
+  "version": "0.1.0",
+  "description": "A YouTube song source for CSH DJ.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dag10/cshdj-youtube"
+  },
+  "author": "Drew Gottlieb",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dag10/cshdj-youtube/issues"
+  },
+  "homepage": "https://github.com/dag10/cshdj-youtube"
+}

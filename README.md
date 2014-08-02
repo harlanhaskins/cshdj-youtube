@@ -1,4 +1,11 @@
-cshdj-youtube
+YouTube
 =============
 
-A YouTube song source for CSH DJ.
+An example song source for [CSH DJ](https://github.com/dag10/DJ).
+
+Disclaimer
+-------------
+
+This package is example code for developing song sources for DJ. Use at your
+own discretion.
+
