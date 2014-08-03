@@ -1,9 +1,17 @@
 /*
  * An example song source for CSH DJ. Searches and fetches audio from YouTube.
+ *
+ * Configuration:
+ *  auth: {
+ *    type: "key:oauth":
+ *    key: "API_KEY (if type is key)",
+ *    token: "API_TOKEN (if type is oauth)"
+ *  }
  */
 /*jshint es5: true */
 
 var Q = require('q');
+var Youtube = require('youtube-api');
 
 /**
  * This module's logging object.
@@ -14,6 +22,21 @@ var log;
  * Name of song source to display in search results.
  */
 exports.display_name = 'Youtube';
+
+/**
+ * Formats a result from the Youtube API format to DJ search result format.
+ *
+ * @param result Object from the Youtube API search result JSON.
+ * @return Object for the result formatted for DJ search results.
+ */
+function format_result(result) {
+  return {
+    id: result.id.videoId,
+    title: result.snippet.title,
+    artist: result.snippet.channelTitle,
+    image_url: result.snippet.thumbnails.default.url
+  };
+}
 
 /**
  * Initialize the song source.
@@ -28,6 +51,8 @@ exports.init = function(_log, config) {
   var deferred = Q.defer();
 
   log = _log;
+
+  Youtube.authenticate(config.auth);
 
   deferred.resolve();
   return deferred.promise;
@@ -54,19 +79,20 @@ exports.init = function(_log, config) {
  */
 exports.search = function(max_results, query) {
   var deferred = Q.defer();
-  var results = [];
 
-  for (var i = 0; i < max_results; i++) {
-    results.push({
-      id: i * 50,
-      title: query,
-      artist: 'Some Channel (' + (i + 1) + ')',
-      album: null,
-      image_url: "http://placehold.it/32/b31217/ffffff/&text=" + (i + 1)
-    });
-  }
+  Youtube.search.list({
+    part: 'snippet',
+    q: encodeURIComponent(query),
+    maxResults: max_results
+  }, function(err, data) {
+    if (err) {
+      deferred.reject(err);
+      return;
+    }
 
-  deferred.resolve(results);
+    deferred.resolve(data.items.map(format_result));
+  });
+
   return deferred.promise;
 };
 
