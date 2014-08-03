@@ -12,6 +12,8 @@
 
 var Q = require('q');
 var Youtube = require('youtube-api');
+var ytdl = require('ytdl-core');
+var fs = require('fs');
 
 /**
  * This module's logging object.
@@ -106,6 +108,36 @@ exports.search = function(max_results, query) {
  *         there was an error, the promise is rejected with an Error object.
  */
 exports.fetch = function(id, download_location) {
-  return Q.reject(new Error('Youtube fetching not implemented yet.'));
+  var deferred = Q.defer();
+
+  id = encodeURIComponent(id);
+  var url = 'http://www.youtube.com/watch?v=' + id;
+  var download_path = download_location + id + '.webm';
+
+  var ws = fs.createWriteStream(download_path);
+
+  var dl = ytdl(url, {
+    quality: 'lowest',
+    filter: function(format) {
+      // Only download a webm file whose itag is in the audio-only range.
+      // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
+      var itag = parseInt(format.itag, 10);
+      return format.container === 'webm' && itag >= 139 && itag <= 172;
+    }
+  });
+
+  dl.pipe(ws);
+
+  dl.on('end', function() {
+    log('Downloaded: ' + url);
+    deferred.resolve(download_path);
+  });
+
+  dl.on('error', function(err) {
+    log.error('Failed to download ' + url + ': ' + (err.message || err));
+    deferred.reject(err);
+  });
+
+  return deferred.promise;
 };
 

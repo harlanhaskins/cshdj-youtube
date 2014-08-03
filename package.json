@@ -8,8 +8,9 @@
     "url": "https://github.com/dag10/cshdj-youtube"
   },
   "dependencies": {
+    "q": "1.0.1",
     "youtube-api": "0.2.2",
-    "q": "1.0.1"
+    "ytdl-core": "0.2.4"
   },
   "author": "Drew Gottlieb",
   "license": "MIT",
