@@ -55,9 +55,21 @@ exports.init = function(_log, config) {
 
   log = _log;
 
-  Youtube.authenticate(config.auth);
+  if (!config.auth) {
+    deferred.reject(new Error('Please configure auth settings.'));
+  } else if (!config.auth.type) {
+    deferred.reject(new Error('Please configure auth type settings.'));
+  } else if (config.auth.type !== 'key' && config.auth.type !== 'oauth') {
+    deferred.reject(new Error('Invalid auth type. Must be "key" or "oauth".'));
+  } else if (config.auth.type === 'key' && !config.auth.key) {
+    deferred.reject(new Error('Auth config missing API key.'));
+  } else if (config.auth.type === 'oauth' && !config.auth.token) {
+    deferred.reject(new Error('Auth config missing auth token.'));
+  } else {
+    Youtube.authenticate(config.auth);
+    deferred.resolve();
+  }
 
-  deferred.resolve();
   return deferred.promise;
 };
 
