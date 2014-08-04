@@ -36,7 +36,8 @@ function format_result(result) {
     id: result.id.videoId,
     title: result.snippet.title,
     artist: result.snippet.channelTitle,
-    image_url: result.snippet.thumbnails.default.url
+    thumbnail_url: result.snippet.thumbnails.default.url,
+    image_url: result.snippet.thumbnails.high.url
   };
 }
 
@@ -77,13 +78,16 @@ exports.init = function(_log, config) {
  *                  title: Title of the song.
  *                  artist: Artist of the song. (optional)
  *                  album: Album of the song. (optional)
- *                  image_url: URL of the album art image. (optional)
+ *                  image_url: URL of the high-res album art image. (optional)
+ *                  thumbnail_url: URL of the low-res album art image for the
+ *                                 search result thumbnail. (optional)
  */
 exports.search = function(max_results, query) {
   var deferred = Q.defer();
 
   Youtube.search.list({
     part: 'snippet',
+    type: 'video',
     q: encodeURIComponent(query),
     maxResults: max_results
   }, function(err, data) {
@@ -116,26 +120,38 @@ exports.fetch = function(id, download_location) {
 
   var ws = fs.createWriteStream(download_path);
 
-  var dl = ytdl(url, {
-    quality: 'lowest',
-    filter: function(format) {
-      // Only download a webm file whose itag is in the audio-only range.
-      // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
-      var itag = parseInt(format.itag, 10);
-      return format.container === 'webm' && itag >= 139 && itag <= 172;
+  ytdl.getInfo(url, function(err, info) {
+    if (err) {
+      deferred.reject(err);
+      return;
     }
-  });
 
-  dl.pipe(ws);
+    if (info && info.length_seconds > 10 * 60) {
+      deferred.reject(new Error('Requested video exceeded 10 minutes.'));
+      return;
+    }
 
-  dl.on('end', function() {
-    log('Downloaded: ' + url);
-    deferred.resolve(download_path);
-  });
+    var dl = ytdl(url, {
+      quality: 'lowest',
+      filter: function(format) {
+        // Only download a webm file whose itag is in the audio-only range.
+        // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
+        var itag = parseInt(format.itag, 10);
+        return format.container === 'webm' && itag >= 139 && itag <= 172;
+      }
+    });
 
-  dl.on('error', function(err) {
-    log.error('Failed to download ' + url + ': ' + (err.message || err));
-    deferred.reject(err);
+    dl.pipe(ws);
+
+    dl.on('end', function() {
+      log('Downloaded: ' + url);
+      deferred.resolve(download_path);
+    });
+
+    dl.on('error', function(err) {
+      log.error('Failed to download ' + url + ': ' + (err.message || err));
+      deferred.reject(err);
+    });
   });
 
   return deferred.promise;
