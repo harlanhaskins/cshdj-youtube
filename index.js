@@ -139,7 +139,9 @@ exports.fetch = function(id, download_location) {
     }
 
     if (info && info.length_seconds > 10 * 60) {
-      deferred.reject(new Error('Requested video exceeded 10 minutes.'));
+      var error = new Error('Requested video exceeded 10 minutes.');
+      error.displaytext = 'Video cannot exceed 10 minutes.';
+      deferred.reject(error);
       return;
     }
 
@@ -162,6 +164,7 @@ exports.fetch = function(id, download_location) {
 
     dl.on('error', function(err) {
       log.error('Failed to download ' + url + ': ' + (err.message || err));
+      err.displaytext = 'Failed to download video.';
       deferred.reject(err);
     });
   });
