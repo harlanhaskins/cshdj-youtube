@@ -104,6 +104,10 @@ exports.search = function(max_results, query) {
     maxResults: max_results
   }, function(err, data) {
     if (err) {
+      if (typeof err === 'string') {
+        err = new Error(err);
+      }
+
       deferred.reject(err);
       return;
     }
@@ -151,7 +155,7 @@ exports.fetch = function(id, download_location) {
         // Only download a webm file whose itag is in the audio-only range.
         // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
         var itag = parseInt(format.itag, 10);
-        return format.container === 'webm' && itag >= 139 && itag <= 172;
+        return itag >= 139 && itag <= 172;
       }
     });
 
