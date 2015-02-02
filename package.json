@@ -10,7 +10,7 @@
   "dependencies": {
     "q": "1.0.1",
     "youtube-api": "0.2.2",
-    "ytdl-core": "0.4.0"
+    "ytdl-core": "0.4.1"
   },
   "author": "Drew Gottlieb",
   "license": "MIT",
